@@ -1,8 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { JOB_CATEGORIES, REGIONS } from "@/lib/constants";
 import JobsFilterBar from "./JobsFilterBar";
-import ApplyButton from "@/components/ApplyButton";
-import { getUserAndProfile } from "@/lib/auth";
 
 type SearchParams = Promise<{
   region?: string;
@@ -18,7 +16,6 @@ export default async function JobsPage({
 }) {
   const sp = await searchParams;
   const supabase = await createSupabaseServerClient();
-  const { profile } = await getUserAndProfile();
 
   let query = supabase.from("jobs").select("*").order("created_at", { ascending: false });
   if (sp.region) query = query.eq("region", sp.region);
@@ -27,20 +24,6 @@ export default async function JobsPage({
   if (sp.q) query = query.or(`company.ilike.%${sp.q}%,job_category.ilike.%${sp.q}%`);
 
   const { data: jobs, error } = await query;
-
-  // 시니어 본인의 senior id (지원하기 버튼에 필요)
-  let seniorId: string | null = null;
-  let appliedJobIds: Set<string> = new Set();
-  if (profile?.role === "senior") {
-    const { data: senior } = await supabase
-      .from("seniors").select("id").eq("user_id", profile.id).maybeSingle();
-    seniorId = senior?.id ?? null;
-    if (seniorId) {
-      const { data: apps } = await supabase
-        .from("applications").select("job_id").eq("senior_id", seniorId);
-      appliedJobIds = new Set((apps ?? []).map((a) => a.job_id as string));
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -88,16 +71,6 @@ export default async function JobsPage({
                   <span className="ml-3 text-gray-500">~ {new Date(job.deadline).toLocaleDateString("ko-KR")}</span>
                 )}
               </div>
-              {profile?.role === "senior" && seniorId && (
-                <ApplyButton
-                  jobId={job.id}
-                  seniorId={seniorId}
-                  alreadyApplied={appliedJobIds.has(job.id)}
-                />
-              )}
-              {!profile && (
-                <a href="/login" className="btn-outline px-3 py-1.5 text-sm">로그인 후 지원</a>
-              )}
             </div>
           </div>
         ))}

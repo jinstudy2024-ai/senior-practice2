@@ -1,10 +1,8 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import DeleteJobButton from "./DeleteJobButton";
 
 export default async function AdminJobsPage() {
-  await requireAdmin();
   const supabase = await createSupabaseServerClient();
   const { data: jobs } = await supabase
     .from("jobs").select("*").order("created_at", { ascending: false });

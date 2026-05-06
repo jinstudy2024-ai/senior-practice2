@@ -1,8 +1,6 @@
-import { requireAdmin } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function AdminApplicantsPage() {
-  await requireAdmin();
   const supabase = await createSupabaseServerClient();
 
   const { data: apps } = await supabase
@@ -10,7 +8,7 @@ export default async function AdminApplicantsPage() {
     .select(`
       id, status, applied_at,
       jobs:job_id(id, company, region, job_category),
-      seniors:senior_id(id, full_name, age, region, job_category, years_experience, resume_url)
+      seniors:senior_id(id, name, region, desired_job, career_years)
     `)
     .order("applied_at", { ascending: false });
 
@@ -39,9 +37,9 @@ export default async function AdminApplicantsPage() {
               const job = (a as any).jobs;
               return (
                 <tr key={a.id}>
-                  <td className="px-4 py-3 font-bold text-brand-800">{senior?.full_name ?? "-"}</td>
+                  <td className="px-4 py-3 font-bold text-brand-800">{senior?.name ?? "-"}</td>
                   <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
-                    {senior?.age}세 · {senior?.region} · {senior?.job_category} · 경력 {senior?.years_experience}년
+                    {senior?.region} · {senior?.desired_job} · 경력 {senior?.career_years}년
                   </td>
                   <td className="px-4 py-3">
                     <div className="font-bold text-brand-800">{job?.company}</div>

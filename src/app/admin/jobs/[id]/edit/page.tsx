@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import JobForm from "../../JobForm";
 
@@ -8,7 +7,6 @@ export default async function EditJobPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
   const { data: job } = await supabase.from("jobs").select("*").eq("id", id).maybeSingle();
